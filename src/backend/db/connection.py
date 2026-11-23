@@ -7,7 +7,19 @@ from backend.core.config import db_settings
 
 def get_db_connection() -> pyodbc.Connection:
     """Abre y retorna una conexión directa pyodbc a SQL Server."""
-    return pyodbc.connect(db_settings.connection_string)
+    try:
+        return pyodbc.connect(db_settings.connection_string)
+    except Exception as primary_error:
+        # Fallback transparente para instancias nombradas locales como .\SQL2025
+        if db_settings.server in (".", "localhost", "127.0.0.1"):
+            alt_conn = db_settings.connection_string.replace(
+                f"SERVER={db_settings.server};", r"SERVER=.\SQL2025;"
+            )
+            try:
+                return pyodbc.connect(alt_conn)
+            except Exception:
+                pass
+        raise primary_error
 
 
 @contextmanager

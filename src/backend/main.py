@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 from backend.apis.personas import router as personas_router
 from backend.apis.auth import router as auth_router
+from backend.apis.incidentes import router as incidentes_router
 from backend.db.connection import check_connection
 from backend.services.exceptions import (
     PersonaAlreadyExistsError,
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.include_router(personas_router)
 app.include_router(auth_router)
+app.include_router(incidentes_router)
 
 
 @app.get("/health/db", tags=["health"], summary="Verificar conexión a SQL Server")
