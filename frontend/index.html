@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECOLIFE - Gestión y Remediación de Vertederos (Huancayo, Perú)</title>
+  
+  <!-- Tipografía Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilos de Leaflet para el Mapa Topográfico -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Estilos del Sistema ECOLIFE (WCAG AA/AAA) -->
+  <link rel="stylesheet" href="styles/ecolife.css">
+</head>
+<body>
+
+  <!-- ==============================================================================
+       HEADER CÍVICO SUPERIOR
+       ============================================================================== -->
+  <header class="civic-header" role="banner">
+    <div class="header-container">
+      
+      <!-- Marca y Logotipo -->
+      <a href="#" class="brand-wrapper" aria-label="ECOLIFE Huancayo - Inicio">
+        <div class="brand-logo-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-title">ECOLIFE</span>
+          <span class="brand-subtitle">Huancayo Sostenible</span>
+        </div>
+      </a>
+
+      <!-- Badge de Estado Ambiental Activo -->
+      <div class="env-status-badge" role="status" aria-live="polite">
+        <span class="pulsing-dot" aria-hidden="true"></span>
+        <span>Monitoreo Ambiental Activo • Valle del Mantaro</span>
+      </div>
+
+      <!-- Acciones de Navegación y Switch de Vistas -->
+      <div class="header-actions">
+        <nav class="view-toggle-nav" aria-label="Selector de módulo de la plataforma">
+          <button id="toggle-citizen-view" class="nav-pill-btn active" aria-pressed="true">
+            <span aria-hidden="true">📱</span> Vista Ciudadano
+          </button>
+          <button id="toggle-dashboard-view" class="nav-pill-btn" aria-pressed="false">
+            <span aria-hidden="true">🖥️</span> Panel Fiscalización
+          </button>
+        </nav>
+
+        <button class="btn-auth" id="btn-login-header" aria-label="Acceso institucional o inicio de sesión">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>Acceso Fiscalizador</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==============================================================================
+       CONTENIDO PRINCIPAL
+       ============================================================================== -->
+  <main class="main-wrapper" id="main-content" role="main">
+
+    <!-- ============================================================================
+         MÓDULO 1: VISTA CIUDADANO (MOBILE-FIRST)
+         ============================================================================ -->
+    <section id="view-citizen" class="module-section active-view" aria-labelledby="heading-citizen">
+      <div class="citizen-container">
+
+        <!-- Hero Card Cívico -->
+        <div class="citizen-hero-card">
+          <h1 id="heading-citizen" class="citizen-hero-title">Reporte de Alerta Verde</h1>
+          <p class="citizen-hero-desc">
+            Geolocaliza focos de basura acumulada, vertederos clandestinos o escombros en Huancayo. Tu reporte activa la brigada municipal de remediación inmediata.
+          </p>
+        </div>
+
+        <!-- Formulario Alerta Verde -->
+        <form id="form-green-alert" class="alert-form-card" novalidate aria-label="Formulario de reporte cívico de contaminación">
+
+          <!-- 1. Geolocalización (GPS) -->
+          <div class="form-group">
+            <label class="form-label" for="btn-capture-gps">1. Ubicación del Foco Contaminante (GPS)</label>
+            <div class="gps-wrapper">
+              <button type="button" id="btn-capture-gps" class="btn-gps" aria-label="Capturar geolocalización actual vía GPS">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="22" y1="12" x2="18" y2="12"/>
+                  <line x1="6" y1="12" x2="2" y2="12"/>
+                  <line x1="12" y1="6" x2="12" y2="2"/>
+                  <line x1="12" y1="22" x2="12" y2="18"/>
+                </svg>
+                <span>Capturar mi Ubicación GPS</span>
+              </button>
+
+              <div class="gps-info-box" aria-live="polite">
+                <span>📍 Coordenadas:</span>
+                <span id="gps-status-text" class="gps-coords-text">-12.0653, -75.2049</span>
+              </div>
+
+              <!-- Inputs ocultos o editables de coordenadas -->
+              <input type="hidden" id="input-lat" name="latitude" value="-12.0653">
+              <input type="hidden" id="input-lng" name="longitude" value="-75.2049">
+
+              <div class="manual-location-inputs">
+                <div>
+                  <label for="input-district" class="form-help">Distrito de Huancayo:</label>
+                  <select id="input-district" class="select-input" required aria-label="Seleccionar distrito">
+                    <option value="Huancayo Centro" selected>Huancayo Centro</option>
+                    <option value="El Tambo">El Tambo</option>
+                    <option value="Chilca">Chilca</option>
+                    <option value="Pilcomayo">Pilcomayo</option>
+                    <option value="San Agustín de Cajas">San Agustín de Cajas</option>
+                    <option value="Huancán">Huancán</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="input-address" class="form-help">Dirección o Referencia:</label>
+                  <input type="text" id="input-address" class="input-text" placeholder="Ej. Av. Ferrocarril y Shullcas" value="Av. Ferrocarril c/ Jr. Puno" required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Selector de Tipo de Residuo Contaminante -->
+          <div class="form-group">
+            <fieldset style="border: none; margin: 0; padding: 0;">
+              <legend class="form-label">2. Tipo de Residuo Contaminante</legend>
+              <div class="waste-grid" role="radiogroup" aria-label="Opciones de tipo de residuo">
+                
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Plásticos y Microplásticos" checked>
+                  <span class="waste-icon" aria-hidden="true">🛍️</span>
+                  <span class="waste-text">Plásticos y Microplásticos</span>
+                </label>
+
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Escombros y Construcción">
+                  <span class="waste-icon" aria-hidden="true">🧱</span>
+                  <span class="waste-text">Escombros y Demolición</span>
+                </label>
+
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Orgánicos y Agrícolas">
+                  <span class="waste-icon" aria-hidden="true">🍂</span>
+                  <span class="waste-text">Orgánicos y Agrícolas</span>
+                </label>
+
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Residuos Peligrosos y Hospitalarios">
+                  <span class="waste-icon" aria-hidden="true">☣️</span>
+                  <span class="waste-text">Peligrosos y Hospitalarios</span>
+                </label>
+
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Basura Domiciliaria Voluminosa">
+                  <span class="waste-icon" aria-hidden="true">🛋️</span>
+                  <span class="waste-text">Domiciliaria Voluminosa</span>
+                </label>
+
+                <label class="waste-card-option">
+                  <input type="radio" name="waste_type" value="Neumáticos y Llantas">
+                  <span class="waste-icon" aria-hidden="true">🛞</span>
+                  <span class="waste-text">Neumáticos y Llantas</span>
+                </label>
+
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- 3. Input para Evidencia Fotográfica -->
+          <div class="form-group">
+            <label class="form-label" for="input-photo">3. Evidencia Fotográfica (Foto del Foco)</label>
+            
+            <div id="photo-upload-zone" class="photo-upload-zone" tabindex="0" role="button" aria-label="Subir fotografía de evidencia">
+              <input type="file" id="input-photo" class="photo-input-hidden" accept="image/*" capture="environment" aria-label="Tomar foto con cámara o seleccionar archivo">
+              <div class="upload-icon" aria-hidden="true">📸</div>
+              <p class="upload-title">Toca para tomar foto o seleccionar imagen</p>
+              <p class="upload-subtitle">Formatos aceptados: JPG, PNG, WebP (Máx. 10MB)</p>
+            </div>
+
+            <!-- Preview fotográfico -->
+            <div id="photo-preview" class="photo-preview-wrapper" aria-live="polite">
+              <img id="photo-preview-img" class="photo-preview-img" src="" alt="Previsualización de la evidencia fotográfica capturada">
+              <button type="button" id="btn-remove-photo" class="btn-remove-photo" aria-label="Eliminar fotografía adjunta">&times;</button>
+            </div>
+          </div>
+
+          <!-- 4. Campo de Texto para Detalles Adicionales -->
+          <div class="form-group">
+            <label class="form-label" for="input-details">4. Detalles Adicionales del Incidente</label>
+            <textarea
+              id="input-details"
+              class="textarea-input"
+              rows="3"
+              maxlength="1500"
+              placeholder="Describe la cantidad aproximada, riesgo de quema, si obstruye canales de agua o pasos peatonales..."
+              required
+              aria-describedby="details-help char-count"
+            >Acumulación de botellas y bolsas plásticas obstruyendo la cuneta pluvial en la intersección.</textarea>
+            <div class="char-counter">
+              <span id="char-count" aria-live="polite">85 / 1500</span>
+            </div>
+          </div>
+
+          <!-- 5. Botón Principal de Enviar Reporte -->
+          <button type="submit" id="btn-submit-report" class="btn-submit-report">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            <span>Enviar Reporte Ambiental</span>
+          </button>
+
+        </form>
+
+      </div>
+    </section>
+
+    <!-- ============================================================================
+         MÓDULO 2: PANEL DE FISCALIZACIÓN (CENTRO DE MONITOREO - DESKTOP)
+         ============================================================================ -->
+    <section id="view-dashboard" class="module-section" aria-labelledby="heading-dashboard">
+      <div class="dashboard-container">
+
+        <!-- Barra Superior de Control de Fiscalización -->
+        <div class="dashboard-header-bar">
+          <div>
+            <h1 id="heading-dashboard" class="dash-title">Centro de Fiscalización Ambiental</h1>
+            <p class="dash-subtitle">Monitoreo y respuesta táctica ante vertederos ilegales en Huancayo Metropolitano.</p>
+          </div>
+          <button id="btn-refresh-dashboard" class="btn-secondary" aria-label="Sincronizar datos con la API de FastAPI">
+            <span aria-hidden="true">🔄</span> Sincronizar en Vivo
+          </button>
+        </div>
+
+        <!-- Tarjetas de Métricas (KPIs) -->
+        <div class="kpi-grid" role="region" aria-label="Indicadores Clave de Desempeño">
+          
+          <!-- KPI 1: Total Alertas -->
+          <div class="kpi-card kpi-total">
+            <div class="kpi-header">
+              <span class="kpi-label">Total de Alertas</span>
+              <div class="kpi-icon-badge" aria-hidden="true">📊</div>
+            </div>
+            <span id="kpi-total-val" class="kpi-value">6</span>
+            <span class="kpi-meta">Reportes ciudadanos acumulados</span>
+          </div>
+
+          <!-- KPI 2: Puntos Críticos -->
+          <div class="kpi-card kpi-critical">
+            <div class="kpi-header">
+              <span class="kpi-label">Puntos Críticos</span>
+              <div class="kpi-icon-badge" aria-hidden="true">⚠️</div>
+            </div>
+            <span id="kpi-critical-val" class="kpi-value">2</span>
+            <span class="kpi-meta">Alta gravedad / Riesgo sanitario</span>
+          </div>
+
+          <!-- KPI 3: Alertas Atendidas -->
+          <div class="kpi-card kpi-resolved">
+            <div class="kpi-header">
+              <span class="kpi-label">Alertas Atendidas</span>
+              <div class="kpi-icon-badge" aria-hidden="true">✅</div>
+            </div>
+            <span id="kpi-resolved-val" class="kpi-value">2</span>
+            <span class="kpi-meta">Remediación y limpieza completada</span>
+          </div>
+
+          <!-- KPI 4: Tiempo Promedio de Respuesta -->
+          <div class="kpi-card kpi-time">
+            <div class="kpi-header">
+              <span class="kpi-label">Tiempo Promedio</span>
+              <div class="kpi-icon-badge" aria-hidden="true">⏱️</div>
+            </div>
+            <span id="kpi-time-val" class="kpi-value">3.5 horas</span>
+            <span class="kpi-meta">Objetivo municipal: &lt; 6.0 hrs</span>
+          </div>
+
+        </div>
+
+        <!-- Grilla Principal Desktop: Mapa Topográfico + Bandeja de Incidentes -->
+        <div class="desktop-main-grid">
+
+          <!-- Columna Izquierda: Mapa Topográfico Metropolitano -->
+          <div class="map-card-wrapper" role="region" aria-labelledby="heading-map">
+            <div class="card-title-group">
+              <h2 id="heading-map" class="card-heading">Topografía Metropolitana e Incidentes</h2>
+              <span class="code-badge">Huancayo • El Tambo • Chilca</span>
+            </div>
+
+            <!-- Contenedor del Mapa Leaflet -->
+            <div id="huancayo-map" class="map-container-box" role="application" aria-label="Mapa interactivo con incidentes en Huancayo"></div>
+
+            <!-- Leyenda del Mapa -->
+            <div class="map-legend" aria-hidden="true">
+              <div class="legend-item">
+                <span class="legend-dot dot-critical"></span>
+                <span>Crítico / Pendiente</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot dot-process"></span>
+                <span>En Proceso</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot dot-resolved"></span>
+                <span>Resuelto</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Bandeja de Incidentes (Tabla) -->
+          <div class="table-card-wrapper" role="region" aria-labelledby="heading-table">
+            <div class="card-title-group">
+              <h2 id="heading-table" class="card-heading">Bandeja de Incidentes</h2>
+            </div>
+
+            <!-- Barra de Herramientas de la Tabla -->
+            <div class="table-toolbar">
+              <div class="search-input-wrapper">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input
+                  type="text"
+                  id="search-incident-input"
+                  class="search-input"
+                  placeholder="Buscar por código, calle o distrito..."
+                  aria-label="Buscar incidentes"
+                >
+              </div>
+
+              <select id="filter-status-select" class="filter-select" aria-label="Filtrar por estado">
+                <option value="Todos" selected>Todos los Estados</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En proceso">En proceso</option>
+                <option value="Resuelto">Resuelto</option>
+              </select>
+            </div>
+
+            <!-- Tabla de Datos Accesible -->
+            <div class="table-responsive">
+              <table class="incident-table" aria-label="Lista de incidentes ambientales recibidos">
+                <thead>
+                  <tr>
+                    <th scope="col">ID / Código</th>
+                    <th scope="col">Ubicación</th>
+                    <th scope="col">Tipo de Residuo</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="incident-table-body">
+                  <!-- Se llena dinámicamente con JavaScript -->
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem;">Cargando reportes desde la API...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================================================
+       MODAL 1: CONFIRMACIÓN DE REPORTE AMBIENTAL (CIUDADANO)
+       ============================================================================== -->
+  <div id="modal-report-success" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="success-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="success-modal-title" class="modal-title">¡Reporte Ambiental Registrado!</h2>
+        <button id="btn-close-success" class="btn-close-modal" aria-label="Cerrar ventana emergente">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;" aria-hidden="true">🌱</div>
+        <p style="font-size: 1.05rem; color: var(--eco-forest-900); font-weight: 700;">
+          Gracias por tu compromiso cívico con Huancayo.
+        </p>
+        <p style="font-size: 0.9rem; color: var(--eco-slate-700); margin: 0.5rem 0 1rem;">
+          Tu alerta ha sido derivada inmediatamente a la brigada de fiscalización ambiental. Puedes realizar seguimiento con el código:
+        </p>
+        <div style="padding: 0.85rem; background: var(--eco-mint-50); border: 2px dashed var(--eco-forest-800); border-radius: var(--radius-md); margin-bottom: 1rem;">
+          <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--eco-slate-500); display: block; font-weight: 700;">Código de Seguimiento</span>
+          <span id="modal-report-code" style="font-family: monospace; font-size: 1.5rem; font-weight: 800; color: var(--eco-forest-900);">ECO-HYO-1001</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button type="button" class="btn-primary" onclick="document.getElementById('modal-report-success').classList.remove('modal-active');">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================================================
+       MODAL 2: GESTIÓN Y ACCIÓN DE FISCALIZADOR
+       ============================================================================== -->
+  <div id="modal-action-incident" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-action-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <span id="modal-action-code" class="code-badge">ECO-HYO-1002</span>
+          <h2 id="modal-action-title" class="modal-title" style="margin-top: 4px;">Atención de Incidente</h2>
+        </div>
+        <button id="btn-close-action-modal" class="btn-close-modal" aria-label="Cerrar modal de gestión">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <img id="modal-action-img" class="modal-preview-img" src="" alt="Evidencia fotográfica del vertedero">
+
+        <div>
+          <strong style="font-size: 0.85rem; color: var(--eco-slate-500); display: block;">Ubicación:</strong>
+          <span id="modal-action-address" style="font-weight: 600; color: var(--eco-slate-900);">Av. Ferrocarril c/ Jr. Puno</span>
+        </div>
+
+        <div>
+          <strong style="font-size: 0.85rem; color: var(--eco-slate-500); display: block;">Detalles del Ciudadano:</strong>
+          <p id="modal-action-details" style="font-size: 0.9rem; color: var(--eco-slate-700); background: var(--eco-slate-100); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-top: 4px;">
+            Acumulación de residuos...
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.5rem;">
+          <label class="form-label" for="select-new-status">Actualizar Estado:</label>
+          <select id="select-new-status" class="select-input">
+            <option value="Pendiente">Pendiente (En espera de inspección)</option>
+            <option value="En proceso">En proceso (Brigada y volquete asignados)</option>
+            <option value="Resuelto">Resuelto (Remediación y limpieza efectuada)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="input-action-notes">Observaciones del Fiscalizador:</label>
+          <textarea id="input-action-notes" class="textarea-input" rows="2" placeholder="Ingresar acta de inspección, empresa responsable o destino de residuos..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancel-action-modal" class="btn-secondary">Cancelar</button>
+        <button type="button" id="btn-save-status" class="btn-primary">Actualizar Estado</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================================================
+       MODAL 3: ACCESO Y SEGURIDAD ARGON2 / JWT (FISCALIZADORES)
+       ============================================================================== -->
+  <div id="modal-auth" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-auth-title">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 id="modal-auth-title" class="modal-title">Acceso Institucional</h2>
+        <button id="btn-close-auth-modal" class="btn-close-modal" aria-label="Cerrar modal de autenticación">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Pestañas Iniciar Sesión / Registro -->
+        <div style="display: flex; background: var(--eco-slate-100); padding: 4px; border-radius: var(--radius-md); margin-bottom: 1rem;">
+          <button type="button" id="tab-login" class="nav-pill-btn active" style="flex: 1; justify-content: center;">Iniciar Sesión</button>
+          <button type="button" id="tab-register" class="nav-pill-btn" style="flex: 1; justify-content: center;">Registrarse</button>
+        </div>
+
+        <form id="form-auth" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="auth-email">Correo Electrónico:</label>
+            <input type="email" id="auth-email" class="input-text" placeholder="fiscalizador@ecolife.pe" required value="fiscalizador@ecolife.pe">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="auth-password">Contraseña:</label>
+            <input type="password" id="auth-password" class="input-text" placeholder="••••••••" required value="Huancayo2026">
+            <span class="form-help" style="display: flex; align-items: center; gap: 4px; color: var(--eco-forest-800); font-weight: 600; margin-top: 6px;">
+              🛡️ Cifrado con Argon2id + Token JWT en SQL Server
+            </span>
+          </div>
+
+          <div id="auth-error-msg" style="display: none; padding: 0.6rem; background: var(--status-critical-bg); color: var(--status-critical-text); border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+
+          <button type="submit" id="btn-submit-auth" class="btn-submit-report" style="margin-top: 0.5rem;">
+            <span>Iniciar Sesión</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS para mapas -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Lógica Modular ES6 -->
+  <script type="module">
+    import { initCitizenModule } from './js/citizen.js';
+    import { initDashboardModule } from './js/dashboard.js';
+    import { EcolifeAPI } from './js/api.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Inicializar Módulos
+      initCitizenModule();
+      initDashboardModule();
+
+      // 2. Control de Alternancia entre Vistas (Ciudadano vs Fiscalizador)
+      const btnCitizenView = document.getElementById('toggle-citizen-view');
+      const btnDashboardView = document.getElementById('toggle-dashboard-view');
+      const viewCitizen = document.getElementById('view-citizen');
+      const viewDashboard = document.getElementById('view-dashboard');
+      const btnLoginHeader = document.getElementById('btn-login-header');
+
+      // 3. Control de Autenticación con Argon2
+      const modalAuth = document.getElementById('modal-auth');
+      const btnCloseAuth = document.getElementById('btn-close-auth-modal');
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+      const formAuth = document.getElementById('form-auth');
+      const authEmail = document.getElementById('auth-email');
+      const authPassword = document.getElementById('auth-password');
+      const btnSubmitAuth = document.getElementById('btn-submit-auth');
+      const authErrorMsg = document.getElementById('auth-error-msg');
+      let authMode = 'login'; // 'login' o 'register'
+
+      // Verificar si hay sesión activa previa
+      actualizarEstadoBotonSesion();
+
+      btnLoginHeader?.addEventListener('click', () => {
+        const user = EcolifeAPI.getCurrentUser();
+        if (user.token) {
+          if (confirm(`Sesión activa como: ${user.email}\n¿Deseas cerrar sesión?`)) {
+            EcolifeAPI.logout();
+            actualizarEstadoBotonSesion();
+          }
+        } else {
+          abrirModalAuth();
+        }
+      });
+
+      btnCloseAuth?.addEventListener('click', () => {
+        modalAuth?.classList.remove('modal-active');
+      });
+
+      tabLogin?.addEventListener('click', () => {
+        authMode = 'login';
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        btnSubmitAuth.innerHTML = '<span>Iniciar Sesión</span>';
+        if (authErrorMsg) authErrorMsg.style.display = 'none';
+      });
+
+      tabRegister?.addEventListener('click', () => {
+        authMode = 'register';
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        btnSubmitAuth.innerHTML = '<span>Crear Cuenta (Argon2)</span>';
+        if (authErrorMsg) authErrorMsg.style.display = 'none';
+      });
+
+      formAuth?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+
+        if (!email || !password) {
+          mostrarErrorAuth('Por favor ingresa correo y contraseña.');
+          return;
+        }
+
+        btnSubmitAuth.disabled = true;
+        btnSubmitAuth.innerHTML = '<span>Validando con Argon2...</span>';
+        if (authErrorMsg) authErrorMsg.style.display = 'none';
+
+        try {
+          if (authMode === 'login') {
+            await EcolifeAPI.login(email, password);
+          } else {
+            await EcolifeAPI.register(email, password);
+          }
+
+          modalAuth?.classList.remove('modal-active');
+          actualizarEstadoBotonSesion();
+          activarVista('dashboard');
+          alert(`¡Bienvenido al Centro de Fiscalización!\nSesión iniciada con éxito para ${email}.`);
+        } catch (err) {
+          mostrarErrorAuth(err.message);
+        } finally {
+          btnSubmitAuth.disabled = false;
+          btnSubmitAuth.innerHTML = authMode === 'login' ? '<span>Iniciar Sesión</span>' : '<span>Crear Cuenta (Argon2)</span>';
+        }
+      });
+
+      function abrirModalAuth() {
+        if (modalAuth) modalAuth.classList.add('modal-active');
+      }
+
+      function mostrarErrorAuth(msg) {
+        if (authErrorMsg) {
+          authErrorMsg.textContent = msg;
+          authErrorMsg.style.display = 'block';
+        }
+      }
+
+      function actualizarEstadoBotonSesion() {
+        const user = EcolifeAPI.getCurrentUser();
+        if (user.token && user.email) {
+          btnLoginHeader.innerHTML = `
+            <span>👤 ${user.email.split('@')[0]}</span>
+            <span style="font-size: 11px; opacity: 0.85; margin-left: 4px;">(Salir)</span>
+          `;
+          btnLoginHeader.style.background = 'var(--eco-forest-800)';
+        } else {
+          btnLoginHeader.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Acceso Fiscalizador</span>
+          `;
+          btnLoginHeader.style.background = 'var(--eco-forest-900)';
+        }
+      }
+
+      btnCitizenView?.addEventListener('click', () => {
+        activarVista('citizen');
+      });
+
+      btnDashboardView?.addEventListener('click', () => {
+        activarVista('dashboard');
+      });
+
+      function activarVista(vista) {
+        if (vista === 'citizen') {
+          btnCitizenView.classList.add('active');
+          btnCitizenView.setAttribute('aria-pressed', 'true');
+          btnDashboardView.classList.remove('active');
+          btnDashboardView.setAttribute('aria-pressed', 'false');
+
+          viewCitizen.classList.add('active-view');
+          viewDashboard.classList.remove('active-view');
+        } else {
+          btnDashboardView.classList.add('active');
+          btnDashboardView.setAttribute('aria-pressed', 'true');
+          btnCitizenView.classList.remove('active');
+          btnCitizenView.setAttribute('aria-pressed', 'false');
+
+          viewDashboard.classList.add('active-view');
+          viewCitizen.classList.remove('active-view');
+
+          // Forzar refresco de tamaño de Leaflet al hacerse visible
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+          }, 150);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
